@@ -38,17 +38,25 @@ st.plotly_chart(fig_donut, use_container_width=True)
 # CPA by Campaign
 st.subheader("Cost Per Acquisition by Campaign")
 google_ads['CPA'] = google_ads['Cost'] / google_ads['Conversions'].replace(0, pd.NA)
-meta_ads['CPA'] = meta_ads['Amount spent (USD)'] / meta_ads['Leads'].replace(0, pd.NA)
 google_ads['Source'] = 'Google'
-meta_ads['Source'] = 'Meta'
 google_ads.rename(columns={'Campaign': 'Campaign Name'}, inplace=True)
-meta_ads.rename(columns={'Ad Name': 'Campaign Name'}, inplace=True)
-cpa_data = pd.concat([
-    google_ads[['Campaign Name', 'CPA', 'Source']],
-    meta_ads[['Campaign Name', 'CPA', 'Source']]
-], ignore_index=True).dropna()
-fig_cpa = px.bar(cpa_data, x='Campaign Name', y='CPA', color='Source', barmode='group')
-st.plotly_chart(fig_cpa, use_container_width=True)
+
+# Handle unknown or missing 'Leads' column in meta_ads
+possible_leads_columns = ['Leads', 'Results', 'Leads (form)', 'Leads (conversion)']
+meta_leads_column = next((col for col in meta_ads.columns if col in possible_leads_columns), None)
+
+if meta_leads_column:
+    meta_ads['CPA'] = meta_ads['Amount spent (USD)'] / meta_ads[meta_leads_column].replace(0, pd.NA)
+    meta_ads['Source'] = 'Meta'
+    meta_ads.rename(columns={'Ad Name': 'Campaign Name'}, inplace=True)
+    cpa_data = pd.concat([
+        google_ads[['Campaign Name', 'CPA', 'Source']],
+        meta_ads[['Campaign Name', 'CPA', 'Source']]
+    ], ignore_index=True).dropna()
+    fig_cpa = px.bar(cpa_data, x='Campaign Name', y='CPA', color='Source', barmode='group')
+    st.plotly_chart(fig_cpa, use_container_width=True)
+else:
+    st.warning("No valid 'Leads' column found in Meta Ads. CPA data for Meta not displayed.")
 
 # Cluster Analysis
 st.subheader("Lead Clusters")
