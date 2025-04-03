@@ -25,8 +25,15 @@ col3.metric("Total Google + Meta Spend",
 st.subheader("Sales Outcome (Won vs Lost)")
 crm['Sale Status'] = crm['Lead Status Type'].apply(lambda x: 'Won' if x == 'Sold' else 'Lost')
 outcome_counts = crm['Sale Status'].value_counts().reset_index()
-fig_donut = px.pie(outcome_counts, names='index', values='Sale Status', hole=0.4,
-                   color_discrete_sequence=px.colors.qualitative.Set2)
+outcome_counts.columns = ['Sale Status', 'Count']  # Rename to match Plotly's requirements
+
+fig_donut = px.pie(
+    outcome_counts,
+    names='Sale Status',
+    values='Count',
+    hole=0.4,
+    color_discrete_sequence=px.colors.qualitative.Set2
+)
 st.plotly_chart(fig_donut, use_container_width=True)
 
 # CPA by Campaign
